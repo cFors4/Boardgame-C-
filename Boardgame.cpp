@@ -186,14 +186,7 @@ bool check(vector<int> colors){
 }
 
 
-int all(vector<int> colors,int col){
-  int count = 0;
-  for(int x=0;x<colors.size();x++){
-    if(colors[x]==col)
-      count+=1;
-  }
-  return count;
-}
+
 
 
 vector<int> optimalSequence(vector<int> colors,Graph g){
@@ -223,7 +216,7 @@ vector<int> optimalSequence(vector<int> colors,Graph g){
         continue;
       }
       //check impact of change
-      fill(closed.begin(), closed.end(), 0);
+      vector<int> closed;
       for (int filled=0;filled<same.size();filled++){
         for (auto adjacent:g.adjacency(same[filled])){
           if(colors[adjacent]==next && !contains(closed,adjacent)){
@@ -235,38 +228,15 @@ vector<int> optimalSequence(vector<int> colors,Graph g){
     }
     //pick biggest impact
     int max = *max_element(impact.begin(), impact.end());
-    bool move = false;
-    if(!move){
-    for(int i=1;i < impact.size();i++){
-
-      if(impact[i]==all(colors,i) && impact[i]!=0){
-        move = true;
-        cout<<"all "<<i<<" quantitiy "<<impact[i]<<endl;
-        vector<int> same = g.findSame(colors);
-        colors = changeSame(i,colors,same);
-        finished = check(colors);
-        moves.push_back(i);
-        break;
-
-      }
-    }
-    if(!move){
-    for(int i=1;i < impact.size();i++){
+    for(int i=0;i < impact.size();i++){
       if(impact[i]==max){
-        cout<<"max"<<endl;
         vector<int> same = g.findSame(colors);
         colors = changeSame(i,colors,same);
         finished = check(colors);
         moves.push_back(i);
-        break;
       }
-    }
-  }
 
     }
-    cout<<endl;
-    print(moves);
-    cout<<endl;
 
   }
   return moves;
