@@ -15,11 +15,18 @@ void print(vector<int> const &input)
   }
 }
 
+bool contains(vector<int> const &input,int key){
+  if (count(input.begin(), input.end(), key))
+  return true;
+  else
+  return false;
+}
+
 class Graph
 {
   int V;    // No. of vertices
   vector<int> *adj;
-  int traverseColors(int v, bool visited[],vector<int> colors);
+  vector<int> sameCol(int v, bool visited[],vector<int> colors,vector<int> change);
 
 public:
   Graph(int V);   // Constructor
@@ -27,6 +34,10 @@ public:
   vector<int> findSame(vector<int> colors);
   vector<int> adjacency(int v);
   void makeEdges(int N);
+  void change(int V);
+
+  int G(vector<int> colors,int current,int adj);
+  int H(vector<int> colors,int adj);
 };
 
 vector<int> Graph::findSame(vector<int> colors)
@@ -35,32 +46,33 @@ vector<int> Graph::findSame(vector<int> colors)
   bool *visited = new bool[V];
   vector<int> change;
   for(int v = 0; v < V; v++)
-    visited[v] = false;
+  visited[v] = false;
 
-  for (int v=0; v<V; v++)
-  {
-    if (visited[v] == false)
-    {
-      // print all reachable vertices
-      // from v
-      int x = traverseColors(v, visited,colors);
-      change.push_back(x);
-    }
-  }
+
+  change =  sameCol(0, visited,colors,change);
+  change.push_back(0);
+
+
   return change;
 }
 
-int Graph::traverseColors(int v, bool visited[],vector<int> colors)
+vector<int> Graph:: sameCol(int v, bool visited[],vector<int> colors,vector<int> change)
 {
   // Mark the current node as visited
   visited[v] = true;
 
+  //go through adjacent
   vector<int>::iterator i;
-  for(i = adj[v].begin(); i != adj[v].end(); ++i){
-    if(!visited[*i] && colors[*i]!=colors[0]){
-      traverseColors(*i, visited,colors);
+  for(auto i:adj[v]){
+    if(colors[i] != colors[v] && !contains(change,v)){
+      change.push_back(v);
     }
-  }return v;
+    else if(colors[i] == colors[v] && !visited[i]){
+      change.push_back(i);
+      change = sameCol(i,visited,colors,change);
+    }
+  }
+  return change;
 }
 
 Graph::Graph(int V)
@@ -93,6 +105,33 @@ void Graph::makeEdges(int N){
       addEdge(i,i+1);
     }
   }
+}
+
+void Graph::change(int V){
+  this->V = V;
+  adj = new vector<int>[V];
+}
+
+
+int Graph::G(vector<int> colors,int current,int next){
+  //impact to traverse // make turn
+  if (colors[current] == colors[next]){
+    return 0;
+  }
+  return 1;
+}
+
+int Graph::H(vector<int> colors,int next){
+  //surrounding are same or not //impact
+  int counter = 0;
+  for(auto x:adj[next]){
+    if(colors[x] == colors[next]){
+      counter -=0.5;
+    } else if(colors[x]!= colors[next]){
+      counter +=0.5;
+    }
+  }
+  return counter;
 }
 
 
@@ -130,19 +169,107 @@ vector<int> changeSame(int color,vector<int> colors,vector<int> same){
 vector<int> turn(int color,vector<int> colors,Graph g,int numVertices){
   //take a turn
   vector<int> same = g.findSame(colors);
+
   vector<int> colored = changeSame(color,colors,same);
+
   return colored;
 }
 
 bool check(vector<int> colors){
   if ( equal(colors.begin() + 1, colors.end(), colors.begin()) )
   {
-    cout << "All elements are equal each other" << endl;
     return true;
   }
   else{
     return false;
   }
+}
+
+
+int all(vector<int> colors,int col){
+  int count = 0;
+  for(int x=0;x<colors.size();x++){
+    if(colors[x]==col)
+      count+=1;
+  }
+  return count;
+}
+
+
+vector<int> optimalSequence(vector<int> colors,Graph g){
+  vector<int> closed;
+  vector<int> moves;
+  vector<int> impact(7,0);
+  bool finished;
+  while (!finished) {
+
+    vector<int> same;
+    finished = check(colors);
+
+    // Try all colors but the last one used.
+    fill(impact.begin(), impact.end(), 0);
+    int numColors = 7;
+    for (int next = 1; next < numColors; ++next) {
+      //if color same as last move
+      if(moves.size()>0)
+      if (next == moves[moves.size()])
+      continue;
+
+      //if unchanged
+      vector<int> newColors = turn(next,colors,g,colors.size());
+      same = g.findSame(colors);
+      vector<int> newSame = g.findSame(newColors);
+      if (same == newSame){
+        continue;
+      }
+      //check impact of change
+      fill(closed.begin(), closed.end(), 0);
+      for (int filled=0;filled<same.size();filled++){
+        for (auto adjacent:g.adjacency(same[filled])){
+          if(colors[adjacent]==next && !contains(closed,adjacent)){
+            impact[next]+=1;
+            closed.push_back(adjacent);
+          }
+        }
+      }
+    }
+    //pick biggest impact
+    int max = *max_element(impact.begin(), impact.end());
+    bool move = false;
+    if(!move){
+    for(int i=1;i < impact.size();i++){
+
+      if(impact[i]==all(colors,i) && impact[i]!=0){
+        move = true;
+        cout<<"all "<<i<<" quantitiy "<<impact[i]<<endl;
+        vector<int> same = g.findSame(colors);
+        colors = changeSame(i,colors,same);
+        finished = check(colors);
+        moves.push_back(i);
+        break;
+
+      }
+    }
+    if(!move){
+    for(int i=1;i < impact.size();i++){
+      if(impact[i]==max){
+        cout<<"max"<<endl;
+        vector<int> same = g.findSame(colors);
+        colors = changeSame(i,colors,same);
+        finished = check(colors);
+        moves.push_back(i);
+        break;
+      }
+    }
+  }
+
+    }
+    cout<<endl;
+    print(moves);
+    cout<<endl;
+
+  }
+  return moves;
 }
 
 
@@ -169,15 +296,22 @@ int main()
   for (int i: elements) {
     colors.push_back(i);
   }
+
   //Create graph
   Graph g(N*N);
   //make relationships between positions on matrix
   g.makeEdges(N);
+  //A*
+  vector<int> optimalPath = optimalSequence(colors,g);
+  int optimalSteps = optimalPath.size();
+  cout<<"optimal steps are "<<optimalSteps<<endl;
+
 
   int steps=0;
   bool finished = false;
   string Q= "";
   vector<int> gen;
+
   while (true){
     //print out from a list of colors
     steps+=1;
@@ -190,6 +324,7 @@ int main()
     cout << "change pivot to a color represented from 1-6: ";
     //TODO add check for 1-6
     cin >> color;
+
     colors = turn(color,colors,g,numVertices);
     //check if done
     finished = check(colors);
@@ -197,7 +332,7 @@ int main()
 
 
     if (finished){
-      cout << "\n##########CONGRAT###########\n ";
+      cout << "\n##########CONGRATS###########\n ";
       cout << "Q to quit: ";
       //TODO add check for 1-6
       cin >> Q;
@@ -213,13 +348,16 @@ int main()
           int ran = rand() % 6 + 1;
           gen.push_back(ran);
           //cout << gen[i] << endl;
-          }
+        }
+
+        g.change(numVertices);
+        g.makeEdges(N);
         colors = gen;
         steps=0;
         finished=false;
-        times+=1;
-        }
+
       }
     }
-    return 0;
   }
+  return 0;
+}
