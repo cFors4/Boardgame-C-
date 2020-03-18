@@ -4,6 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include<bits/stdc++.h>
+#include <tuple>
 
 
 using namespace std;
@@ -113,28 +114,6 @@ void Graph::change(int V){
 }
 
 
-int Graph::G(vector<int> colors,int current,int next){
-  //impact to traverse // make turn
-  if (colors[current] == colors[next]){
-    return 0;
-  }
-  return 1;
-}
-
-int Graph::H(vector<int> colors,int next){
-  //surrounding are same or not //impact
-  int counter = 0;
-  for(auto x:adj[next]){
-    if(colors[x] == colors[next]){
-      counter -=0.5;
-    } else if(colors[x]!= colors[next]){
-      counter +=0.5;
-    }
-  }
-  return counter;
-}
-
-
 
 void openFile(string fileName, int elements[]){
 
@@ -152,7 +131,7 @@ void openFile(string fileName, int elements[]){
 void outElements(vector<int> colors,int N){
   int len = N*N;
   for(int i = 0;i <len;i++){
-    cout << colors[i];
+    cout << " "<<colors[i];
     if(i % N-(N-1) == 0){
       cout << "\n";
     }
@@ -242,6 +221,86 @@ vector<int> optimalSequence(vector<int> colors,Graph g){
   return moves;
 }
 
+int h(vector<int> colors){
+  int count = 0;
+  for (int i=1;i<7;i++){
+    if(contains(colors,i))
+      count += 1;
+  }
+  return count;
+}
+
+
+tuple<int, vector<vector<int>>> search(vector<vector<int>> path,int g, int bound, int previous,Graph graph){
+  vector<int> node = path.back();
+  int f = g + h(node);
+  if (f>bound){
+    return make_tuple(f,path);
+  }
+  if (check(node)){
+    return make_tuple(g,path);
+  }
+
+  int min = 100;
+  int numColors = 7;
+
+  for (int next = 1; next < numColors; next++) {
+    vector<int> newColors = turn(next,node,graph,node.size());
+    bool breaks = false;
+
+    for(int i=0;i<path.size();i++)
+    if(newColors==path[i])
+    breaks = true;
+
+    //if color move already done
+    if (breaks==true)
+      continue;
+
+    //if color same as last move
+    if(next == previous)
+      continue;
+
+    //if color makes no difference
+    vector<int> same = graph.findSame(node);
+    vector<int> newSame = graph.findSame(newColors);
+    if (same == newSame){
+      continue;
+    }
+
+
+    //push move to path
+    path.push_back(newColors);
+    int t;
+    tie(t, path) = search(path,g+1,bound,next,graph);
+    if (check(path.back())){
+      return make_tuple(t,path);
+    }
+    if(t<min){
+      min=t;
+    }
+    path.pop_back();
+}
+return make_tuple(min,path);
+}
+
+
+int ida_star(vector<int> colors,Graph graph){
+  int bound=h(colors);
+  vector<vector<int>> path;
+  path.push_back(colors);
+  cout<<"starting bound "<<bound<<endl;
+  while(true){
+    int t;
+    tie(t,path) = search(path,0,bound,0,graph);
+    if (check(path.back())){
+      return t;
+    }
+    bound = t;
+  }
+}
+
+
+
 
 // Drive program to test above
 int main()
@@ -275,6 +334,8 @@ int main()
   vector<int> optimalPath = optimalSequence(colors,g);
   int optimalSteps = optimalPath.size();
   cout<<"optimal steps are "<<optimalSteps<<endl;
+  int optimal = ida_star(colors,g);
+  cout<<"optimal steps are "<<optimal<<endl;
 
 
   int steps=0;
