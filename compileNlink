@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+g++ -c graph.cpp
+g++ -c main.cpp
+g++ -o Boardgame main.o graph.o
