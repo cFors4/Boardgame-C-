@@ -36,9 +36,6 @@ public:
   vector<int> adjacency(int v);
   void makeEdges(int N);
   void change(int V);
-
-  int G(vector<int> colors,int current,int adj);
-  int H(vector<int> colors,int adj);
 };
 
 vector<int> Graph::findSame(vector<int> colors)
@@ -165,9 +162,6 @@ bool check(vector<int> colors){
 }
 
 
-
-
-
 vector<int> optimalSequence(vector<int> colors,Graph g){
   vector<int> closed;
   vector<int> moves;
@@ -288,7 +282,7 @@ int ida_star(vector<int> colors,Graph graph){
   int bound=h(colors);
   vector<vector<int>> path;
   path.push_back(colors);
-  cout<<"starting bound "<<bound<<endl;
+
   while(true){
     int t;
     tie(t,path) = search(path,0,bound,0,graph);
@@ -305,90 +299,119 @@ int ida_star(vector<int> colors,Graph graph){
 // Drive program to test above
 int main()
 {
-  //input framework
+
+  //set up for graph and game
+  Graph g(25);
+  int steps=0;
+  bool finished = false;
+  string Q;
+
+  //initialisation for shape and contents of vector for the game grid
+  int N;
+  int numVertices;
+  vector<int> colors;
+  vector<int> colorsFile;
+
+  //initialisation of int variables
+  int optimal;
+  int ran;
   //reading from a file
+  int data;
   string fileNam = "example.txt";
   //opens file
   ifstream ufile(fileNam);
-  int data;
-  // gets first element of list
+  //gets first element of list
   ufile >> data;
-  int N = data;
+  N = data;
   ufile.close();
-
-  int numVertices = N*N;
+  numVertices = N*N;
   int elements[numVertices];
-  // returns list of elements
+  //returns list of elements
   openFile(fileNam,elements);
   //convert int array to vector
-  vector<int> colors;
   for (int i: elements) {
-    colors.push_back(i);
+    colorsFile.push_back(i);
   }
 
-  //Create graph
-  Graph g(N*N);
-  //make relationships between positions on matrix
-  g.makeEdges(N);
-  //A*
-  vector<int> optimalPath = optimalSequence(colors,g);
-  int optimalSteps = optimalPath.size();
-  cout<<"optimal steps are "<<optimalSteps<<endl;
-  int optimal = ida_star(colors,g);
-  cout<<"optimal steps are "<<optimal<<endl;
-
-
-  int steps=0;
-  bool finished = false;
-  string Q= "";
-  vector<int> gen;
-
   while (true){
-    //print out from a list of colors
-    steps+=1;
-    cout<<"STEP: "<<steps;
-    cout << "\n";
-    outElements(colors,N);
-    cout << "\n";
-
-    int color;
-    cout << "change pivot to a color represented from 1-6: ";
-    //TODO add check for 1-6
-    cin >> color;
-
-    colors = turn(color,colors,g,numVertices);
-    //check if done
-    finished = check(colors);
+    string RorF;
+    while (cout << "Randomly generated or read from a file: [R/F] " && !(cin >> RorF)  || !(RorF == "R" || RorF =="r" || RorF == "F" || RorF =="f")) {
+      cin.clear(); //clear bad input flag
+      cin.ignore(numeric_limits<streamsize>::max(), '\n'); //discard input
+      cout << "Invalid input; please re-enter.\n";
+    }
 
 
+    if(RorF == "R" || RorF =="r"){
 
+      //check N 3 to 9
+      while (cout << "Pick N for an N*N graph from 3 to 9 and randomly generate: " && !(cin >> N)  || N < 3 || N > 9) {
+        cin.clear(); //clear bad input flag
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); //discard input
+        cout << "Invalid input; please re-enter.\n";
+      }
+
+      vector<int> gen;
+      numVertices = N*N;
+      for (int i =0; i < numVertices; i++){
+        ran = rand() % 6 + 1;
+        gen.push_back(ran);
+        //cout << gen[i] << endl;
+      }
+      colors = gen;
+    }
+    if(RorF == "F" || RorF =="f"){
+      N = data;
+      numVertices = N*N;
+      colors = colorsFile;
+    }
+    g.change(numVertices);
+    g.makeEdges(N);
+    if (N<8){
+    optimal = ida_star(colors,g);
+    }
+    else{
+      vector<int> optimalPath = optimalSequence(colors,g);
+      optimal = optimalPath.size();
+    }
+    steps=0;
+    finished=false;
+
+    //play game until finished
+    while(!finished){
+      steps+=1;
+      cout<<"STEP: "<<steps;
+      cout << "\n";
+      outElements(colors,N);
+      cout << "\n";
+
+      //check color 1 to 6
+      int color;
+      while (cout << "change pivot to a color represented from 1-6: " && !(cin >> color)  || color < 1 || color > 6) {
+        cin.clear(); //clear bad input flag
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); //discard input
+        cout << "Invalid input; please re-enter.\n";
+      }
+      //take turn
+      colors = turn(color,colors,g,numVertices);
+      //check if done
+      finished = check(colors);
+    }
+
+    //when done details and option to stop
     if (finished){
       cout << "\n##########CONGRATS###########\n ";
+      cout<<"optimal steps are "<<optimal<<endl;
+      cout<<"you did it in "<<steps<<" steps"<<endl;
       cout << "Q to quit: ";
-      //TODO add check for 1-6
       cin >> Q;
       if(Q=="Q"||Q=="q"){
         exit(1);
-      }else{
-        cout << "Pick N for an N*N graph from 3 to 9 and randomly generate: ";
-        // TODO: check N 3 to 9
-        cin >> N;
-
-        numVertices = N*N;
-        for (int i =0; i < numVertices; i++){
-          int ran = rand() % 6 + 1;
-          gen.push_back(ran);
-          //cout << gen[i] << endl;
-        }
-
-        g.change(numVertices);
-        g.makeEdges(N);
-        colors = gen;
+      }
         steps=0;
         finished=false;
-
       }
     }
-  }
+
   return 0;
 }
