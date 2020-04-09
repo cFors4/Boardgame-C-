@@ -9,6 +9,14 @@
 
 using namespace std;
 
+/**
+ * print out a vector
+ *
+ * auxillary function used for testing
+ *
+ * @param any vector of integers to be printed
+ * @return void
+ */
 void print(vector<int> const &input)
 {
   for (int i = 0; i < input.size(); i++) {
@@ -16,6 +24,15 @@ void print(vector<int> const &input)
   }
 }
 
+/**
+ * search vector of integers for a particular int
+ *
+ * auxillary function used for testing if a vector contains
+ *
+ * @param any vector of integers to be searched
+ * @param integer to be looked for in the vector<int>
+ * @return true or false if an integer is contained in the vector
+ */
 bool contains(vector<int> const &input,int key){
   if (count(input.begin(), input.end(), key))
   return true;
@@ -26,7 +43,7 @@ bool contains(vector<int> const &input,int key){
 class Graph
 {
   int V;    // No. of vertices
-  vector<int> *adj;
+  vector<int> *adj; //adjacent vector determining structure of graph and positions
   vector<int> sameCol(int v, bool visited[],vector<int> colors,vector<int> change);
 
 public:
@@ -110,8 +127,6 @@ void Graph::change(int V){
   adj = new vector<int>[V];
 }
 
-
-
 void openFile(string fileName, int elements[]){
 
   ifstream ufile(fileName);
@@ -142,16 +157,18 @@ vector<int> changeSame(int color,vector<int> colors,vector<int> same){
   return colors;
 }
 
+//take a turn
 vector<int> turn(int color,vector<int> colors,Graph g,int numVertices){
-  //take a turn
+  //find same colors to be changed
   vector<int> same = g.findSame(colors);
-
+  //change same colors based on same and given color input
   vector<int> colored = changeSame(color,colors,same);
-
+  //return changed colors after turn taken
   return colored;
 }
-
+//check if the game is finished
 bool check(vector<int> colors){
+  //return true if all colors in colors are the same
   if ( equal(colors.begin() + 1, colors.end(), colors.begin()) )
   {
     return true;
@@ -162,7 +179,7 @@ bool check(vector<int> colors){
 }
 
 
-vector<int> optimalSequence(vector<int> colors,Graph g){
+vector<int> greedySequence(vector<int> colors,Graph g){
   vector<int> closed;
   vector<int> moves;
   vector<int> impact(7,0);
@@ -208,9 +225,7 @@ vector<int> optimalSequence(vector<int> colors,Graph g){
         finished = check(colors);
         moves.push_back(i);
       }
-
     }
-
   }
   return moves;
 }
@@ -300,7 +315,7 @@ int ida_star(vector<int> colors,Graph graph){
 int main()
 {
 
-  //set up for graph and game
+  //initialisation for graph and game state
   Graph g(25);
   int steps=0;
   bool finished = false;
@@ -335,6 +350,7 @@ int main()
 
   while (true){
     string RorF;
+    //check input is r or f
     while (cout << "Randomly generated or read from a file: [R/F] " && !(cin >> RorF)  || !(RorF == "R" || RorF =="r" || RorF == "F" || RorF =="f")) {
       cin.clear(); //clear bad input flag
       cin.ignore(numeric_limits<streamsize>::max(), '\n'); //discard input
@@ -344,38 +360,40 @@ int main()
 
     if(RorF == "R" || RorF =="r"){
 
-      //check N 3 to 9
+      //check N is 3 to 9
       while (cout << "Pick N for an N*N graph from 3 to 9 and randomly generate: " && !(cin >> N)  || N < 3 || N > 9) {
         cin.clear(); //clear bad input flag
         cin.ignore(numeric_limits<streamsize>::max(), '\n'); //discard input
         cout << "Invalid input; please re-enter.\n";
       }
-
+      //generate random new graph based on size N given in input
       vector<int> gen;
       numVertices = N*N;
       for (int i =0; i < numVertices; i++){
         ran = rand() % 6 + 1;
         gen.push_back(ran);
-        //cout << gen[i] << endl;
       }
+      //make newly generated colors new colors
       colors = gen;
     }
     if(RorF == "F" || RorF =="f"){
+      //set to details read in from file
       N = data;
       numVertices = N*N;
       colors = colorsFile;
     }
+
+    //change graph
     g.change(numVertices);
     g.makeEdges(N);
+    //
     if (N<8){
     optimal = ida_star(colors,g);
     }
     else{
-      vector<int> optimalPath = optimalSequence(colors,g);
-      optimal = optimalPath.size();
+      vector<int> greedyPath = greedySequence(colors,g);
+      optimal = greedyPath.size();
     }
-    steps=0;
-    finished=false;
 
     //play game until finished
     while(!finished){
@@ -401,15 +419,18 @@ int main()
     //when done details and option to stop
     if (finished){
       cout << "\n##########CONGRATS###########\n ";
-      cout<<"optimal steps are "<<optimal<<endl;
-      cout<<"you did it in "<<steps<<" steps"<<endl;
+      cout<<"Optimal steps are "<<optimal<<"."<<endl;
+      cout<<"You did it in "<<steps<<" steps."<<endl;
+
+      //Q to Quit
       cout << "Q to quit: ";
       cin >> Q;
       if(Q=="Q"||Q=="q"){
         exit(1);
       }
-        steps=0;
-        finished=false;
+      //reset game state to be played again
+      steps=0;
+      finished=false;
       }
     }
 
