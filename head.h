@@ -25,15 +25,8 @@ public:
   void change(int V);
 };
 
-/**
-* search vector of integers for a particular int
-*
-* auxillary function used for testing if a vector contains
-*
-* @param any vector of integers to be searched
-* @param integer to be looked for in the vector<int>
-* @return true or false if an integer is contained in the vector
-*/
+//search vector of integers for a particular int
+
 bool contains(vector<int> const &input,int key);
 
 #endif

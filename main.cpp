@@ -206,30 +206,30 @@ int ida_star(vector<int> colors,Graph graph){
 using namespace std;
 int main()
 {
-  
+
   //initialisation for graph and game state
   Graph g(25);
   int steps=0;
   bool finished = false;
   string Q;
-  
+
 
   //initialisation for shape and contents of vector for the game grid
   int N;
   int numVertices;
   vector<int> colors;
   vector<int> colorsFile;
-  
+
 
   //initialisation of int variables
   int optimal;
   int ran;
-  
+
 
   //reading from a file
   int data;
   string fileNam = "example.txt";
-  
+
   //opens file
   ifstream ufile(fileNam);
   //gets first element of list
@@ -238,13 +238,13 @@ int main()
   ufile.close();
   numVertices = N*N;
   vector<int> elements;
-  
+
   //returns list of elements
   elements = openFile(fileNam,elements);
   //convert int array to vector
-  
+
   while (true){
-    
+
     string RorF;
     //check input is r or f
     while (cout << "Randomly generated or read from a file: [R/F] " && !(cin >> RorF)  || !(RorF == "R" || RorF =="r" || RorF == "F" || RorF =="f")) {
@@ -288,7 +288,21 @@ int main()
     }
     //if greater than depth 8 use greedy path finder as is optimal in time and runs in an adequate time
     else{
+      vector<int> vect2;
       vector<int> greedyPath = greedySequence(colors,g);
+      for (int i=0; i<colors.size(); i++){
+        vect2.push_back(colors[i]);
+      }
+      for (int i =0; i < 10; i++){
+        vect2 = turn(greedyPath[i],vect2,g,numVertices);
+      }
+      cout <<"STEP 10"<< "\n";
+      outElements(vect2,N);
+      for (int i =10; i < greedyPath.size(); i++){
+        vect2 = turn(greedyPath[i],vect2,g,numVertices);
+      }
+      cout <<"STEP"<< greedyPath.size()<<"\n";
+      outElements(vect2,N);
       optimal = greedyPath.size();
     }
 

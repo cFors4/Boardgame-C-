@@ -2,7 +2,8 @@
 
 using namespace std;
 
-
+//find all same in the colors vector and return all the same that can be changed
+//used for changing colors of the graph each turn.
 vector<int> Graph::findSame(vector<int> colors)
 {
   // Mark all the vertices as not visited
@@ -17,7 +18,8 @@ vector<int> Graph::findSame(vector<int> colors)
   return change;
 }
 
-vector<int> Graph:: sameCol(int v, bool visited[],vector<int> colors,vector<int> change)
+//takes in coloros and traveres all nodes that can be travelled to (same color)
+vector<int> Graph::sameCol(int v, bool visited[],vector<int> colors,vector<int> change)
 {
   // Mark the current node as visited
   visited[v] = true;
@@ -36,6 +38,7 @@ vector<int> Graph:: sameCol(int v, bool visited[],vector<int> colors,vector<int>
   return change;
 }
 
+//constructor
 Graph::Graph(int V)
 {
   this->V = V;
